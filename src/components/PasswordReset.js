@@ -1,71 +1,76 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PasswordReset = () => {
+    const [email, setEmail] = useState('');
+    const [message, setMessage] = useState('');
 
-    const [email, setEmail] = useState("");
+    const handleChange = (e) => {
+        setEmail(e.target.value);
+    };
 
-    const [message, setMessage] = useState("");
-
-    const setVal = (e) => {
-        setEmail(e.target.value)
-    }
-
-    const sendLink = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (email === "") {
-            toast.error("email is required!", {
-                position: "top-center"
-            });
-        } else if (!email.includes("@")) {
-            toast.warning("includes @ in your email!", {
-                position: "top-center"
-            });
-        } else {
-            const res = await fetch("/sendpasswordlink", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email })
-            });
-
-            const data = await res.json();
-
-            if (data.status == 201) {
-                setEmail("");
-                setMessage(true)
+        try {
+            if (email === '') {
+                toast.error('Email is required!', { position: 'top-center' });
+            } else if (!email.includes('@')) {
+                toast.warning('Please enter a valid email address!', { position: 'top-center' });
             } else {
-                toast.error("Invalid User",{
-                    position: "top-center"
-                })
+                const response = await fetch('/sendpasswordlink', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
+
+                if (response.ok) {
+                    setEmail('');
+                    setMessage('Password reset link sent successfully to your email!');
+                } else {
+                    throw new Error('Invalid User');
+                }
             }
+        } catch (error) {
+            console.error('Error sending password reset link:', error);
+            toast.error('Error sending password reset link. Please try again later.', {
+                position: 'top-center',
+            });
         }
-    }
+    };
 
     return (
-        <>
-            <section>
-                <div className="form_data">
-                    <div className="form_heading">
-                        <h1>Enter Your Email</h1>
-                    </div>
-
-                    {message ? <p style={{ color: "green", fontWeight: "bold" }}>pasword reset link send Succsfully in Your Email</p> : ""}
-                    <form>
-                        <div className="form_input">
-                            <label htmlFor="email">Email</label>
-                            <input type="email" value={email} onChange={setVal} name="email" id="email" placeholder='Enter Your Email Address' />
-                        </div>
-
-                        <button className='btn' onClick={sendLink}>Send</button>
-                    </form>
-                    <ToastContainer />
+        <section>
+            <div className="form_data">
+                <div className="form_heading">
+                    <h1>Enter Your Email</h1>
                 </div>
-            </section>
-        </>
-    )
-}
+                {message && (
+                    <p style={{ color: 'green', fontWeight: 'bold' }}>{message}</p>
+                )}
+                <form onSubmit={handleSubmit}>
+                    <div className="form_input">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={handleChange}
+                            name="email"
+                            id="email"
+                            placeholder="Enter Your Email Address"
+                        />
+                    </div>
+                    <button type="submit" className="btn">
+                        Send
+                    </button>
+                </form>
+                <ToastContainer />
+            </div>
+        </section>
+    );
+};
 
-export default PasswordReset
+export default PasswordReset;
